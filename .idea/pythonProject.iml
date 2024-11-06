@@ -2,6 +2,23 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/Amazon" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Autoteile Direkt.DE" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Cardone" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Carid" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Dorman" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/FTM" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Json_to_Excel" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/Lian-tuoh" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/MAVAL" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Rockauto" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SMP" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Spectra Premium" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Src_to_Pic" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/WVE" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/eBay" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tool" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/原厂" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="G:\ProgramData\anaconda3" jdkType="Python SDK" />
