@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         原厂车型描述
 // @namespace    http://tampermonkey.net/
-// @version      2025.01.16
+// @version      2025.02.13
 // @description  原厂车型整理
 // @author       Westbroobo
 // @match        *://www.oemfordpart.com/oem-parts/*
@@ -32,6 +32,7 @@
 // @match        *://www.isuzupartscenter.com/oem-parts/*
 // @match        *://www.suzukicarparts.com/oem-parts/*
 // @match        *://www.sunsetporscheparts.com/oem-parts/*
+// @match        *://www.mercedesbenzpartsstore.com/oem-parts/*
 // @icon         https://static.runoob.com/images/c-runoob-logo.ico
 // @grant        none
 // ==/UserScript==
@@ -44,6 +45,7 @@
     const xpath_hidden_2 = document.querySelector('#layout_product > div > div > div:nth-child(4) > div > div > div > div > div:nth-child(3) > div > div > div > a');
     const xpath_hidden_3 = document.querySelector('#layout_product > div > div > div:nth-child(4) > div > div > div > div > div:nth-child(3) > div:nth-child(2) > div > div > div > a');
     const xpath_hidden_4 = document.querySelector('#layout_product > div > div > div:nth-child(4) > div > div > div > div > div:nth-child(4) > div:nth-child(2) > div.product-fitment-module > div > div > a');
+    const xpath_hidden_5 = document.querySelector('#tab-vehicle-fitment-tab > div > div > a');
 
     function selectElementsByXPath(xpath) {
         const elements = [];
@@ -75,7 +77,7 @@
 
     function extractData_1() {
         const trs = selectElementsByXPath('//*[@id="layout_product"]/div/div/div[4]/div/div/div/div/div[4]/div/div/div/table/tbody/tr');
-        handle_trs(trs)
+        handle_trs(trs);
     }
 
     function extractData_2() {
@@ -93,6 +95,11 @@
         handle_trs(trs);
     }
 
+    function extractData_5() {
+        const trs = selectElementsByXPath('//*[@id="tab-vehicle-fitment-tab"]/div/div/table/tbody/tr');
+        handle_trs(trs);
+    }
+
     if (xpath_hidden_1) {
         xpath_hidden_1.click();
         extractData_1();
@@ -105,11 +112,26 @@
     }else if (xpath_hidden_4) {
         xpath_hidden_4.click();
         extractData_4();
-    } else {
+    }else if (xpath_hidden_5) {
+        xpath_hidden_5.click();
+        extractData_5();
+    }
+    else {
         extractData_1();
         extractData_2();
         extractData_3();
         extractData_4();
+    }
+
+
+    window.copyToClipboard = function (text) {
+        const textarea = document.createElement('textarea');
+        const value = text.replace(/, /g, ';').replace(/,/g, '\n').replace(/#/g, ' ');
+        textarea.value = value.replace(/;/g, ', ');
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
     }
 
     function getUniqueEngines(engineStr) {
@@ -173,7 +195,7 @@
             const yearRanges = getYearRanges(entry.years);
 
             if (yearRanges.length === 1 || yearRanges.includes('-')) {
-                finalResult1.push(entry.makeModel + "#" + engine_integration + "#" + yearRanges[0]);
+                finalResult1.push(entry.makeModel + "#" + yearRanges[0] + "#" + engine_integration);
             } else if (yearRanges.length > 1) {
                 yearRanges.forEach((yearRange) => {
                     if (yearRange.includes('-')){
@@ -187,11 +209,11 @@
                         engine_integration2 = engine_integration2.join(', ').split(', ');
                         let engine_integration = [...new Set(engine_integration2)];
                         engine_integration = engine_integration.join(', ');
-                        finalResult1.push(entry.makeModel + "#" + engine_integration + "#" + yearRange);
+                        finalResult1.push(entry.makeModel + "#" + yearRange + "#" + engine_integration);
                     } else {
                         const index = data.Make_Model_Year.indexOf(entry.makeModel + ' '+ yearRange);
                         const engine_integration_1 = data.Engine[index];
-                        finalResult1.push(entry.makeModel + "#" + engine_integration_1 + "#" + yearRange);
+                        finalResult1.push(entry.makeModel + "#" + yearRange + "#" + engine_integration_1);
                     }
                 });
             }
@@ -233,17 +255,17 @@
         return finalResult2;
     }
 
+    if (data.Year.length === 0) {
+        extractData_5();
+    }
     var processedData = processCarData(data);
     var processedData2 = processCarData2(data);
 
     var engineData = [...new Set(data.Engine.sort())].join(', ');
-    engineData = [...new Set(engineData.split(', '))].sort().join('\n');
+    var copyengineData = [...new Set(engineData.split(', '))].sort();
+    engineData = copyengineData.join('\n');
 
-    let Array_Vehicle = []
-    processedData2.forEach(function(item) {
-        Array_Vehicle.push(item);
-    });
-    let Vehicle = Array_Vehicle.join('\n');
+    let Vehicle = processedData2.join('\n');
 
     let list_make = [];
     let list_model = [];
@@ -253,18 +275,18 @@
         let separated_data = data.split("#");
         list_make.push(separated_data[0]);
         list_model.push(separated_data[1]);
-        list_year.push(separated_data[3]);
-        list_engine.push(separated_data[2]);
+        list_year.push(separated_data[2]);
+        list_engine.push(separated_data[3]);
     });
 
     var tablehtml1 = `<div class="tablehtml1">
                          <table style="border-collapse: collapse; width: 100%; margin: 0 auto;">
                              <thead style="background-color: #E0E0E0;">
                                  <tr>
-                                     <th style="border: 1px solid #dddddd; padding: 8px; text-align: center;">Make</th>
-                                     <th style="border: 1px solid #dddddd; padding: 8px; text-align: center;">Model</th>
-                                     <th style="border: 1px solid #dddddd; padding: 8px; text-align: center;">Year</th>
-                                     <th style="border: 1px solid #dddddd; padding: 8px; text-align: center;">Engine & Transmission</th>
+                                     <th onclick="copyToClipboard('${processedData}')" style="border: 1px solid #dddddd; padding: 8px; text-align: center; cursor: pointer; user-select: all;">Make</th>
+                                     <th onclick="copyToClipboard('${processedData}')" style="border: 1px solid #dddddd; padding: 8px; text-align: center; cursor: pointer; user-select: all;">Model</th>
+                                     <th onclick="copyToClipboard('${processedData}')" style="border: 1px solid #dddddd; padding: 8px; text-align: center; cursor: pointer; user-select: all;">Year</th>
+                                     <th onclick="copyToClipboard('${processedData}')" style="border: 1px solid #dddddd; padding: 8px; text-align: center; cursor: pointer; user-select: all;">Engine & Transmission</th>
                                  </tr>
                             </thead><tbody>`;
 
@@ -280,8 +302,8 @@
     var tablehtml2 = `<table style="border: 1px solid #ddd; background-color: #f5f5f5; margin: 0 auto; text-align: center; width: 100%; ">
                           <thead style="background-color: #E0E0E0; font-size: 15px;">
                               <tr>
-                                  <th style="text-align: center; border: 1px solid #dddddd; padding: 8px;">Make_Model_Year</th>
-                                  <th style="text-align: center; border: 1px solid #dddddd; padding: 8px;">Engine & Transmission</th>
+                                  <th onclick="copyToClipboard('${processedData2}')" style="text-align: center; border: 1px solid #dddddd; padding: 8px; cursor: pointer; user-select: all;">Make_Model_Year</th>
+                                  <th onclick="copyToClipboard('${copyengineData}')" style="text-align: center; border: 1px solid #dddddd; padding: 8px; cursor: pointer; user-select: all;">Engine & Transmission</th>
                               </tr>
                           </thead>
                           <tbody>`;
@@ -300,3 +322,4 @@
     }
 scrollToTop();
 })();
+
