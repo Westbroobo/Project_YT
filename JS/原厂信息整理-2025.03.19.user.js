@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         原厂车型整理
+// @name         原厂信息整理
 // @namespace    http://tampermonkey.net/
-// @version      2025.03.07
-// @description  原厂车型整理
+// @version      2025.03.19
+// @description  原厂信息整理
 // @author       Westbroobo
 // @match        *://www.oemfordpart.com/oem-parts/*
 // @match        *://www.subaruparts.com/oem-parts*
@@ -39,6 +39,19 @@
 
 (function() {
     'use strict';
+    let URL = window.location.origin + window.location.pathname;
+    let OE = '';
+    let Replaces = '';
+    let SKU_Element = document.getElementsByClassName('list-value sku-display');
+    let SKU = SKU_Element[0].innerText;
+    let Replaces_Element = document.getElementsByClassName('product-superseded-list');
+    if(Replaces_Element.length === 0) {
+        OE = SKU
+    } else {
+        Replaces = Replaces_Element[0].innerText.replace('Replaces:\t','').replace(', ',';');
+        OE = SKU + ';' + Replaces
+    }
+
     let productDataElement = document.getElementById('product_data');
     let jsonText = productDataElement .textContent;
     let productData = JSON.parse(jsonText);
@@ -62,6 +75,15 @@
         const textarea = document.createElement('textarea');
         const value = text.replace(/, /g, ';').replace(/,/g, '\n').replace(/#/g, ' ');
         textarea.value = value.replace(/;/g, ', ');
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+    }
+
+    window.copyToClipboard_2 = function (text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
@@ -242,8 +264,28 @@
     tablehtml2 += '<tr><td style="padding: 8px; white-space: pre-line; line-height: 1.7; font-size: 15px;border: 1px solid #dddddd;">' + Vehicle + '</td>';
     tablehtml2 += '<td style="padding: 8px; white-space: pre-line; line-height: 1.7; font-size: 15px;border: 1px solid #dddddd;">' + engineData + '</td></tr>';
     tablehtml2 += '</tbody></table><br/><br>';
-
     document.querySelector(".tablehtml1").insertAdjacentHTML("beforebegin", tablehtml2);
+
+    var tablehtml3 = `<table style="border: 1px solid #ddd; background-color: #f5f5f5; margin: 0 auto; text-align: center; width: 100%;">
+
+                          <tr>
+                              <td style=" border: 1px solid #dddddd;; padding: 8px; text-align: center; font-weight: bold; font-size: 13px;">SKU</td>
+                              <td onclick="copyToClipboard_2('${SKU}')" style=" border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12.5px; cursor: pointer; user-select: all;">${SKU}</td>
+                          </tr>
+                          <tr>
+                              <td style=" border: 1px solid #dddddd;; padding: 8px; text-align: center; font-weight: bold;; font-size: 13px;">Replaces</td>
+                              <td onclick="copyToClipboard_2('${Replaces}')" style=" border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12.5px; cursor: pointer; user-select: all;">${Replaces}</td>
+                          </tr>
+                          <tr>
+                             <td style=" border: 1px solid #dddddd;; padding: 8px; text-align: center; font-weight: bold;; font-size: 13px;">OE</td>
+                             <td onclick="copyToClipboard_2('${OE}')" style=" border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12.5px; cursor: pointer; user-select: all;">${OE}</td>
+                          </tr>
+                          <tr>
+                              <td style=" border: 1px solid #dddddd;; padding: 8px; text-align: center; font-weight: bold;; font-size: 13px;">URL</td>
+                              <td onclick="copyToClipboard_2('${URL}')" style=" border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12.5px; cursor: pointer; user-select: all;">${URL}</td>
+                          </tr>
+                      </table>`;
+    document.querySelector(".product-badges").insertAdjacentHTML("afterend", tablehtml3);
 
     function scrollToTop() {
         window.scrollTo({
@@ -252,4 +294,3 @@
         });
     }
 })();
-
