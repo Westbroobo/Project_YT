@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         店铺车型整理
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-27
+// @version      2025-04-01
 // @description  店铺车型整理
 // @author       Westbroobo
 // @match        *://itm.ebaydesc.com/itmdesc/*
@@ -96,32 +96,44 @@
         Vehicle_Informations = selectElementsByXPath('//div[@class=\'rightdes\']/table/tbody/tr');
     }
     let menu = Vehicle_Informations[0].innerText.split('\t');
+    let count = menu.length;
     let make_Indices = findAllIndices(menu, 'Make');
     let model_Indices = findAllIndices(menu, 'Model');
     let year_Indices = findAllIndices(menu, 'Year');
+    if (year_Indices.length === 0) {
+        year_Indices = findAllIndices(menu, 'Years')
+    }
 
     let make_index = menu.indexOf('Make');
     let model_index = menu.indexOf('Model');
     let year_index = menu.indexOf('Year');
+    let make = '', model = '', years = '';
     for (let i = 1; i < Vehicle_Informations.length; i++) {
         if (Vehicle_Informations[i].innerText.includes('\n')) {
         } else {
             let array_vehicles = Vehicle_Informations[i].innerText.split('\t')
-            for (let j = 0; j < make_Indices.length; j++) {
-                let make = array_vehicles[make_Indices[j]];
-                let model = array_vehicles[model_Indices[j]];
-                let years = array_vehicles[year_Indices[j]];
-                if (years.includes('-')) {
-                    let array_years = years.split('-');
-                    let min_year = parseInt(array_years[0]);
-                    let max_year = parseInt(array_years[1]);
-                    for (let k = min_year; k <= max_year; k++) {
-                        data.Make_Model.push(make + ' ' + model);
-                        data.Year.push(parseInt(k));
+            if (array_vehicles.length > 2) {
+                for (let j = 0; j < make_Indices.length; j++) {
+                    if (array_vehicles.length === count) {
+                        make = array_vehicles[make_Indices[j]];
+                        model = array_vehicles[model_Indices[j]];
+                        years = array_vehicles[year_Indices[j]];
+                    } else {
+                        model = array_vehicles[model_Indices[j]-1];
+                        years = array_vehicles[year_Indices[j]-1];
                     }
-                } else {
-                    data.Make_Model.push(make + ' ' + model);
-                    data.Year.push(parseInt(years));
+                    if (years.includes('-')) {
+                        let array_years = years.split('-');
+                        let min_year = parseInt(array_years[0]);
+                        let max_year = parseInt(array_years[1]);
+                        for (let k = min_year; k <= max_year; k++) {
+                            data.Make_Model.push(make + ' ' + model);
+                            data.Year.push(parseInt(k));
+                        }
+                    } else {
+                        data.Make_Model.push(make + ' ' + model);
+                        data.Year.push(parseInt(years));
+                    }
                 }
             }
         }
@@ -142,7 +154,12 @@
                               </tr>
                           </tbody>
                       </table><br></br>`;
-    document.querySelector(".banner").insertAdjacentHTML("beforebegin", tablehtml);
+
+    try {
+        document.querySelector(".banner").insertAdjacentHTML("beforebegin", tablehtml);
+    } catch (error) {
+        document.querySelector(".ke-zeroborder").insertAdjacentHTML("beforebegin", tablehtml);
+    }
 
     const tableCell = document.querySelector('table tbody td');
     if (tableCell) {
