@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         店铺车型整理
+// @name         美国店铺车型整理
 // @namespace    http://tampermonkey.net/
-// @version      2025-04-01
-// @description  店铺车型整理
+// @version      2025-04-08
+// @description  美国店铺车型整理
 // @author       Westbroobo
 // @match        *://itm.ebaydesc.com/itmdesc/*
 // @icon         https://i.ebayimg.com/images/g/WAUAAOSwtJtiJsBZ/s-l140.jpg
@@ -91,15 +91,29 @@
     }
 
     let data = {Make_Model: [], Year: []};
-    let Vehicle_Informations = selectElementsByXPath('//table[@class=\'ke-zeroborder\'][1]/tbody/tr');
-    if (Vehicle_Informations.length === 0) {
-        Vehicle_Informations = selectElementsByXPath('//div[@class=\'rightdes\']/table/tbody/tr');
+    let xpaths = [
+        '//div[@class=\'rightdes\']/table[1]/tbody/tr',
+        '//table[@class=\'ke-zeroborder\'][1]/tbody/tr',
+        '//div[@class=\'x-item-description-child\']/h5/table/tbody/tr'
+    ];
+
+    let Vehicle_Informations = [];
+    for (let i = 0; i < xpaths.length; i++) {
+        let elements = selectElementsByXPath(xpaths[i]);
+        if (elements.length > 0) {
+            Vehicle_Informations = elements;
+            break;
+        }
     }
+
     let menu = Vehicle_Informations[0].innerText.split('\t');
     let count = menu.length;
     let make_Indices = findAllIndices(menu, 'Make');
     let model_Indices = findAllIndices(menu, 'Model');
     let year_Indices = findAllIndices(menu, 'Year');
+    if (make_Indices.length === 0) {
+        make_Indices = findAllIndices(menu, 'Manufacturer')
+    }
     if (year_Indices.length === 0) {
         year_Indices = findAllIndices(menu, 'Years')
     }
@@ -138,9 +152,8 @@
             }
         }
     }
-
     var finalResult = processCarData(data);
-    let Vehicle = finalResult.join('\n');
+    let Vehicle = finalResult.join('\n').replace(/  /g, ' ');
 
     var tablehtml = `<table style="border: 1px solid #ddd; background-color: #f5f5f5; margin: 0 auto; text-align: center; width: 100%; ">
                           <thead style="background-color: #056A8E; font-size: 15px;">
@@ -155,10 +168,18 @@
                           </tbody>
                       </table><br></br>`;
 
-    try {
-        document.querySelector(".banner").insertAdjacentHTML("beforebegin", tablehtml);
-    } catch (error) {
-        document.querySelector(".ke-zeroborder").insertAdjacentHTML("beforebegin", tablehtml);
+    let selectors = [".banner", ".ke-zeroborder", ".x-item-description-child"];
+    let inserted = false;
+    for (let i = 0; i < selectors.length; i++) {
+        let element = document.querySelector(selectors[i]);
+        if (element) {
+            try {
+                element.insertAdjacentHTML("beforebegin", tablehtml);
+                inserted = true;
+                break;
+            } catch (error) {
+            }
+        }
     }
 
     const tableCell = document.querySelector('table tbody td');
