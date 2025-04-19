@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         美国店铺车型整理
+// @name         店铺车型整理(通用)
 // @namespace    http://tampermonkey.net/
 // @version      2025-04-08
-// @description  美国店铺车型整理
+// @description  店铺车型整理
 // @author       Westbroobo
 // @match        *://itm.ebaydesc.com/itmdesc/*
 // @icon         https://i.ebayimg.com/images/g/WAUAAOSwtJtiJsBZ/s-l140.jpg
@@ -92,7 +92,10 @@
 
     let data = {Make_Model: [], Year: []};
     let xpaths = [
+        '//div[@class=\'rightdes\']/div[2]/table[1]/tbody/tr',
+        '//div[@class=\'rightdes\']/div[3]/table[1]/tbody/tr',
         '//div[@class=\'rightdes\']/table[1]/tbody/tr',
+        '//div[@class=\'rightdes\']/h1/table[1]/tbody/tr',
         '//table[@class=\'ke-zeroborder\'][1]/tbody/tr',
         '//div[@class=\'x-item-description-child\']/h5/table/tbody/tr'
     ];
@@ -108,6 +111,12 @@
 
     let menu = Vehicle_Informations[0].innerText.split('\t');
     let count = menu.length;
+    let row = 1
+    while (count < 5) {
+        menu = Vehicle_Informations[row].innerText.split('\t');
+        count = menu.length;
+        row += 1;
+    }
     let make_Indices = findAllIndices(menu, 'Make');
     let model_Indices = findAllIndices(menu, 'Model');
     let year_Indices = findAllIndices(menu, 'Year');
@@ -118,11 +127,8 @@
         year_Indices = findAllIndices(menu, 'Years')
     }
 
-    let make_index = menu.indexOf('Make');
-    let model_index = menu.indexOf('Model');
-    let year_index = menu.indexOf('Year');
     let make = '', model = '', years = '';
-    for (let i = 1; i < Vehicle_Informations.length; i++) {
+    for (let i = row; i < Vehicle_Informations.length; i++) {
         if (Vehicle_Informations[i].innerText.includes('\n')) {
         } else {
             let array_vehicles = Vehicle_Informations[i].innerText.split('\t')
@@ -152,6 +158,46 @@
             }
         }
     }
+    if (data.Year.length === 0){
+        let make_Indices = findAllIndices(menu, 'Bezeichnung');
+        let model_Indices = findAllIndices(menu, 'Modell');
+        let year_Indices = findAllIndices(menu, 'Baujahr');
+
+        for (let i = row; i < Vehicle_Informations.length; i++) {
+            if (Vehicle_Informations[i].innerText.includes('\n')) {
+            } else {
+                let array_vehicles = Vehicle_Informations[i].innerText.split('\t')
+                if (array_vehicles.length > 2) {
+                    for (let j = 0; j < make_Indices.length; j++) {
+                        if (array_vehicles.length === count) {
+                            make = array_vehicles[make_Indices[j]];
+                            model = array_vehicles[model_Indices[j]];
+                            years = array_vehicles[year_Indices[j]];
+                        } else {
+                            model = array_vehicles[model_Indices[j]-1];
+                            years = array_vehicles[year_Indices[j]-1];
+                        }
+                        if (years.includes('-')) {
+                            let array_years = years.split('-');
+                            let min_year = parseInt(array_years[0].substr(0, 4));
+                            let max_year = parseInt(array_years[1].substr(0, 4));
+                            for (let k = min_year; k <= max_year; k++) {
+                                data.Make_Model.push(make + ' ' + model);
+                                data.Year.push(parseInt(k));
+                            }
+                        } else {
+                            if (model != '') {
+                                data.Make_Model.push(make + ' ' + model);
+                                data.Year.push(parseInt(years.substr(0, 4)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    };
+
     var finalResult = processCarData(data);
     let Vehicle = finalResult.join('\n').replace(/  /g, ' ');
 
