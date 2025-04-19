@@ -92,6 +92,7 @@
 
     let data = {Make_Model: [], Year: []};
     let xpaths = [
+        '//div[@class=\'rightdes\']/div[2]/font[5]/table[1]/tbody/tr',
         '//div[@class=\'rightdes\']/div[2]/table[1]/tbody/tr',
         '//div[@class=\'rightdes\']/div[3]/table[1]/tbody/tr',
         '//div[@class=\'rightdes\']/table[1]/tbody/tr',
